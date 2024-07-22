@@ -1,0 +1,13 @@
+__pycache__
+.idea
+.vscode
+venv
+banned_words.db
+bot.py
+bot1.py
+code1.py
+config.py
+database.py
+database1.py
+db.py
+users.txt
