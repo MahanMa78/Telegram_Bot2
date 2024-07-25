@@ -1,6 +1,7 @@
 import telebot 
 import sqlite3
 import time
+from datetime import datetime
 from config import API_TOKEN,admin,file_path
 
 bot = telebot.TeleBot(API_TOKEN)
@@ -74,5 +75,40 @@ def show_users(message):
         
     else:
         bot.reply_to(message,"شما دسترسی به این محتوا ندارید")
+
+
+@bot.message_handler(commands=['show_user'])
+def show_user(message):
+    user_id = message.from_user.id
+    f_name = message.from_user.first_name
+    l_name = message.from_user.last_name
+    username = message.from_user.username
+    timestr = time.strftime("%Y:%m:%d-%H:%M")
+    days = check_point(username)
+
+    connection = sqlite3.connect("users.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT date FROM users WHERE user = ? " , (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    a= result[0]
+    bot.reply_to(message,f'خوش آمدید \nname : {f_name}\nlast name : {l_name} \n id: {user_id} \n username: @{username} \n date: {a}\n points : {days} ')
+
+
+def check_point(username):
+    connection = sqlite3.connect("users.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT date FROM users WHERE user = ? " , (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    if result:
+        created_at = result[0]
+        created_date = datetime.strptime(created_at, '%Y:%m:%d-%H:%M')
+        days_since = (datetime.now() - created_date).days
+        return days_since
+    else:
+        return None
 
 bot.infinity_polling()
