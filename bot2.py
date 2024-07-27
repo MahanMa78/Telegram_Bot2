@@ -50,14 +50,7 @@ def check_username_exists(username):
     return result is not None
 
 
-@bot.message_handler(commands=['show_user'])
-def show_user(message):
-    user_id = int(message.from_user.id)
-    f_name = message.from_user.first_name
-    l_name = message.from_user.last_name
-    username = message.from_user.username
-    timestr = time.strftime("%Y:%m:%d-%H:%M")
-    bot.reply_to(message,f'خوش آمدید \nنام شما:{f_name}\nنام خانوادگی شما:{l_name} \n id: {user_id} \n username: @{username} \n date: {timestr} ')
+
 
 @bot.message_handler(commands=['users'])
 def show_users(message):
@@ -92,8 +85,8 @@ def show_user(message):
     result = cursor.fetchone()
     cursor.close()
     connection.close()
-    a= result[0]
-    bot.reply_to(message,f'خوش آمدید \nname : {f_name}\nlast name : {l_name} \n id: {user_id} \n username: @{username} \n date: {a}\n points : {days} ')
+    date= result[0]
+    bot.reply_to(message,f'خوش آمدید \nname : {f_name}\nlast name : {l_name} \n id: {user_id} \n username: @{username} \n date: {date}\n points : {days} ')
 
 
 def check_point(username):
@@ -110,5 +103,36 @@ def check_point(username):
         return days_since
     else:
         return None
+    
+
+@bot.message_handler(commands=['users_points'])
+def users_points(message):
+
+    if message.from_user.username == admin :
+       users_days = get_days_since_registration_for_all_users()
+       response = "\n".join([f" @{user} :   {days} points" for user, days in users_days])
+       bot.reply_to(message,response)
+
+    else:
+        bot.reply_to(message,"شما اجازه دسترسی به این محتوا را ندارید")
+
+
+
+def get_days_since_registration_for_all_users():
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT user , date FROM users")
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    
+    users_days = []
+    for row in rows:
+        user , date = row
+        date = datetime.strptime(date, '%Y:%m:%d-%H:%M')
+        days_since = (datetime.now() - date).days
+        users_days.append((user,days_since))
+    
+    return users_days
 
 bot.infinity_polling()
